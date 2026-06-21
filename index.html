@@ -275,7 +275,7 @@ async function cloudInit(){
 }
 function setSync(state,txt){const d=document.getElementById('syncDot'),t=document.getElementById('syncTxt');if(d)d.className='dot '+state;if(t)t.textContent=txt;}
 async function pullState(){if(!supa)return;try{const res=await supa.from('app_state').select('data').eq('id','main').maybeSingle();if(res.data&&res.data.data){S=Object.assign(clone(DEFAULTS),res.data.data);localSave();render();}}catch(e){}}
-function maybeResetHabits(){if(S.habitDay!==todayStr()){S.habits.forEach(function(h){h.subs.forEach(function(s){s.done=false;});});S.habitDay=todayStr();save();}}
+function maybeResetHabits(){if(S.habitDay!==todayStr()){S.habits.forEach(function(h){h.done=false;if(h.subs)h.subs.forEach(function(s){s.done=false;});});S.habitDay=todayStr();save();}}
 const SECTIONS=[
   {id:'home',label:'Home',ic:'◉'},{id:'tasks',label:'Tasks',ic:'☰'},{id:'brain',label:'Brain',ic:'❖'},
   {id:'habits',label:'Habits',ic:'✓'},{id:'health',label:'Health',ic:'♥'},{id:'journal',label:'Journal',ic:'✎'},
@@ -430,37 +430,53 @@ function openArea(i){
 }
 function saveAreaSummary(i){const d=brainCats[i];if(!d)return;S.brainSummaries=S.brainSummaries||{};S.brainSummaries[d.name]=val('area_sum');save();closeModal();render();}
 let openHabits={};
+let dragIdx=null;
 function viewHabits(){
   const wrap=document.createElement('div');wrap.className='view active';const hp=habitPct();
   wrap.innerHTML='<div class="card" style="margin-bottom:16px"><div class="ringwrap"><div class="ring" style="--p:'+hp+'"><i>'+hp+'%</i></div>'+
-     '<div><div style="font-weight:700;font-size:16px">Today’s discipline</div><div class="hint">'+habitDoneCount()+' of '+S.habits.length+' habits complete. Tick every subtask to finish a habit. Resets automatically each day.</div></div></div></div>'+
+     '<div><div style="font-weight:700;font-size:16px">Today’s discipline</div><div class="hint">'+habitDoneCount()+' of '+S.habits.length+' habits complete. Resets daily. Drag ☰ or tap ▲▼ to reorder.</div></div></div></div>'+
    '<div class="row" style="justify-content:flex-end"><button class="btn sm" onclick="openHabitModal()">+ New habit</button></div><div class="card"><div id="habitList"></div></div>';
   setTimeout(function(){paintHabits(wrap);});
   return wrap;
 }
 function paintHabits(scope){
   const list=scope.querySelector('#habitList');
-  if(!S.habits.length){list.innerHTML='<div class="empty">No habits yet.</div>';return;}
-  list.innerHTML=S.habits.map(function(h){
-    const done=h.subs.filter(function(s){return s.done;}).length,total=h.subs.length||1,pct=Math.round(done/total*100),allDone=done===total&&total>0;
-    return '<div class="habit"><div class="habit-head" onclick="toggleHabitOpen(\''+h.id+'\')"><div class="chk '+(allDone?'on':'')+'">'+(allDone?'✓':'')+'</div><div class="name">'+esc(h.name)+'</div>'+
-        '<div class="bar"><span style="width:'+pct+'%"></span></div><div class="pct">'+done+'/'+total+'</div><button class="x" onclick="event.stopPropagation();delHabit(\''+h.id+'\')">✕</button></div>'+
-      '<div class="subs '+(openHabits[h.id]?'open':'')+'" id="subs-'+h.id+'">'+
-        h.subs.map(function(s,i){return '<div class="sub '+(s.done?'done':'')+'" onclick="toggleSub(\''+h.id+'\','+i+')"><div class="chk '+(s.done?'on':'')+'">'+(s.done?'✓':'')+'</div><span>'+esc(s.t)+'</span></div>';}).join('')+'</div></div>';
+  if(!S.habits.length){list.innerHTML='<div class="empty">No habits yet. Add one above, or say "add a habit to..." in the capture bar.</div>';return;}
+  list.innerHTML=S.habits.map(function(h,i){
+    const hasSubs=h.subs&&h.subs.length;
+    const done=hasSubs?h.subs.filter(function(s){return s.done;}).length:0;
+    const total=hasSubs?h.subs.length:1;
+    const pct=hasSubs?Math.round(done/total*100):0;
+    const allDone=isHabitDone(h);
+    const handle='<span draggable="true" ondragstart="hDragStart(event,'+i+')" title="Drag to reorder" style="cursor:grab;color:#5a637a;font-size:16px;flex:0 0 auto;padding:0 2px">☰</span>';
+    const arrows='<span style="display:flex;flex-direction:column;line-height:.7;flex:0 0 auto"><button class="x" onclick="event.stopPropagation();moveHabit('+i+',-1)" style="font-size:11px;padding:0 4px">▲</button><button class="x" onclick="event.stopPropagation();moveHabit('+i+',1)" style="font-size:11px;padding:0 4px">▼</button></span>';
+    const bar=hasSubs?'<div class="bar"><span style="width:'+pct+'%"></span></div>':'';
+    const head='<div class="habit-head" ondragover="event.preventDefault()" ondrop="hDrop(event,'+i+')" onclick="'+(hasSubs?'toggleHabitOpen(\''+h.id+'\')':'toggleHabitDone(\''+h.id+'\')')+'">'+
+        handle+'<div class="chk '+(allDone?'on':'')+'">'+(allDone?'✓':'')+'</div>'+
+        '<div class="name" style="flex:1;min-width:0">'+esc(h.name)+'</div>'+bar+arrows+
+        '<button class="x" onclick="event.stopPropagation();delHabit(\''+h.id+'\')">✕</button></div>';
+    const subs=hasSubs?'<div class="subs '+(openHabits[h.id]?'open':'')+'" id="subs-'+h.id+'">'+
+        h.subs.map(function(s,si){return '<div class="sub '+(s.done?'done':'')+'" onclick="toggleSub(\''+h.id+'\','+si+')"><div class="chk '+(s.done?'on':'')+'">'+(s.done?'✓':'')+'</div><span>'+esc(s.t)+'</span></div>';}).join('')+'</div>':'';
+    return '<div class="habit">'+head+subs+'</div>';
   }).join('');
 }
+function isHabitDone(h){if(h.subs&&h.subs.length)return h.subs.every(function(s){return s.done;});return !!h.done;}
+function toggleHabitDone(id){const h=S.habits.find(function(x){return x.id===id;});if(!h)return;h.done=!h.done;save();render();}
 function toggleHabitOpen(id){openHabits[id]=!openHabits[id];const s=document.getElementById('subs-'+id);if(s)s.classList.toggle('open');}
 function toggleSub(hid,i){const h=S.habits.find(function(x){return x.id===hid;});if(!h)return;h.subs[i].done=!h.subs[i].done;openHabits[hid]=true;save();render();const s=document.getElementById('subs-'+hid);if(s)s.classList.add('open');}
 function delHabit(id){S.habits=S.habits.filter(function(h){return h.id!==id;});save();render();}
-function habitDoneCount(){return S.habits.filter(function(h){return h.subs.length&&h.subs.every(function(s){return s.done;});}).length;}
-function habitPct(){if(!S.habits.length)return 0;const tot=S.habits.reduce(function(a,h){return a+h.subs.length;},0);if(!tot)return 0;const done=S.habits.reduce(function(a,h){return a+h.subs.filter(function(s){return s.done;}).length;},0);return Math.round(done/tot*100);}
+function moveHabit(i,dir){const j=i+dir;if(j<0||j>=S.habits.length)return;const a=S.habits[i];S.habits[i]=S.habits[j];S.habits[j]=a;save();render();}
+function hDragStart(e,i){dragIdx=i;try{e.dataTransfer.effectAllowed='move';}catch(_){}}
+function hDrop(e,i){e.preventDefault();if(dragIdx===null||dragIdx===i)return;const it=S.habits.splice(dragIdx,1)[0];S.habits.splice(i,0,it);dragIdx=null;save();render();}
+function habitDoneCount(){return S.habits.filter(isHabitDone).length;}
+function habitPct(){if(!S.habits.length)return 0;return Math.round(S.habits.filter(isHabitDone).length/S.habits.length*100);}
 function openHabitModal(){
-  modal('<h3>New habit</h3><label>Habit name</label><input id="h_name" type="text" placeholder="e.g. Morning routine">'+
-   '<label>Subtasks (one per line)</label><textarea id="h_subs" placeholder="Wake 6am&#10;Cold shower&#10;Meditate"></textarea>'+
+  modal('<h3>New habit</h3><label>Habit name</label><input id="h_name" type="text" placeholder="e.g. Drink water">'+
+   '<label>Subtasks (optional, one per line)</label><textarea id="h_subs" placeholder="Leave blank for a simple daily check-off"></textarea>'+
    '<div class="actions"><button class="btn ghost sm" onclick="closeModal()">Cancel</button><button class="btn sm" onclick="saveHabitModal()">Add habit</button></div>');
   setTimeout(function(){document.getElementById('h_name').focus();});
 }
-function saveHabitModal(){const name=val('h_name').trim();if(!name)return closeModal();const subs=val('h_subs').split('\n').map(function(s){return s.trim();}).filter(Boolean).map(function(t){return {t:t,done:false};});S.habits.push({id:uid(),name:name,subs:subs.length?subs:[{t:'Done',done:false}]});save();closeModal();render();}
+function saveHabitModal(){const name=val('h_name').trim();if(!name)return closeModal();const subs=val('h_subs').split('\n').map(function(s){return s.trim();}).filter(Boolean).map(function(t){return {t:t,done:false};});S.habits.push({id:uid(),name:name,subs:subs,done:false});save();closeModal();render();}
 function viewHealth(){
   const wrap=document.createElement('div');wrap.className='view active';
   const today=S.meals.filter(function(m){return new Date(m.ts).toISOString().slice(0,10)===todayStr();});
