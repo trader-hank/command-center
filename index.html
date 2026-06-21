@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Henry's Command Center</title>
 <style>
   :root{
@@ -20,7 +20,7 @@
       radial-gradient(1100px 700px at 12% -10%, rgba(91,140,255,.14), transparent 55%),
       #070910;
     color:var(--txt); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    -webkit-font-smoothing:antialiased; display:flex; min-height:100vh;
+    -webkit-font-smoothing:antialiased; -webkit-text-size-adjust:100%; display:flex; min-height:100vh;
   }
   button{font-family:inherit; cursor:pointer}
   ::-webkit-scrollbar{width:10px;height:10px}
@@ -28,16 +28,16 @@
   .sidebar{width:236px; flex:0 0 236px; background:linear-gradient(180deg,#0b0e15,#070910);
     border-right:1px solid var(--line); padding:22px 14px; display:flex; flex-direction:column; gap:6px; position:sticky; top:0; height:100vh;}
   .brand{display:flex;align-items:center;gap:10px;padding:6px 10px 18px}
-  .logo{width:36px;height:36px;border-radius:9px;background:var(--grad);display:flex;align-items:center;justify-content:center;font-weight:800;color:#06121a;box-shadow:0 6px 20px rgba(91,140,255,.45)}
+  .logo{width:36px;height:36px;border-radius:9px;background:var(--grad);display:flex;align-items:center;justify-content:center;font-weight:800;color:#06121a;box-shadow:0 6px 20px rgba(91,140,255,.45);flex:0 0 auto}
   .brand h1{font-size:15px;margin:0;letter-spacing:.3px;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800}
   .brand small{color:var(--muted);font-size:11px}
   .nav{display:flex;flex-direction:column;gap:3px}
   .nav button{display:flex;align-items:center;gap:11px;width:100%;text-align:left;background:transparent;border:1px solid transparent;color:var(--muted);padding:10px 12px;border-radius:10px;font-size:14px;font-weight:500;transition:all .16s ease;}
-  .nav button .ic{width:18px;text-align:center;font-size:15px}
+  .nav button .ic{width:18px;text-align:center;font-size:15px;flex:0 0 auto}
   .nav button:hover{background:#11161f;border-color:#1c2436;color:var(--txt)}
   .nav button.active{background:linear-gradient(90deg,rgba(91,140,255,.16),rgba(62,224,176,.05));border-color:#243150;box-shadow:inset 2px 0 0 var(--accent),0 4px 14px rgba(91,140,255,.12);color:#fff}
   .nav button.active .ic{color:var(--accent2)}
-  .nav button .badge{margin-left:auto;background:#1b2335;color:#9fb0d4;font-size:11px;padding:1px 7px;border-radius:20px}
+  .nav button .badge{margin-left:auto;background:#1b2335;color:#9fb0d4;font-size:11px;padding:1px 7px;border-radius:20px;flex:0 0 auto}
   .clock{margin-top:auto;color:var(--muted);font-size:12px;padding:10px 12px;line-height:1.5}
   .clock b{color:var(--txt);font-weight:600}
   .syncpill{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--muted);padding:8px 12px;border-top:1px solid var(--line);margin-top:8px}
@@ -50,7 +50,7 @@
   .quickadd{display:flex;gap:8px;align-items:center}
   .quickadd input{background:#0c1019;border:1px solid var(--line);color:var(--txt);padding:10px 14px;border-radius:10px;width:360px;max-width:42vw;font-size:14px;outline:none}
   .quickadd input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(91,140,255,.18)}
-  .btn{background:var(--grad);color:#06121a;border:none;padding:10px 16px;border-radius:10px;font-weight:700;font-size:14px;box-shadow:0 6px 18px rgba(91,140,255,.28);transition:transform .12s ease,box-shadow .18s ease}
+  .btn{background:var(--grad);color:#06121a;border:none;padding:10px 16px;border-radius:10px;font-weight:700;font-size:14px;box-shadow:0 6px 18px rgba(91,140,255,.28);transition:transform .12s ease,box-shadow .18s ease;white-space:nowrap}
   .btn:hover{transform:translateY(-1px);box-shadow:0 10px 26px rgba(91,140,255,.40)}
   .btn.ghost{background:#11161f;color:var(--txt);border:1px solid var(--line);font-weight:600;box-shadow:none}
   .btn.ghost:hover{border-color:#33405c;transform:translateY(-1px)}
@@ -59,13 +59,45 @@
   .cols-2{grid-template-columns:1fr 1fr}
   .cols-3{grid-template-columns:repeat(3,1fr)}
   @media(max-width:1050px){.cols-2,.cols-3{grid-template-columns:1fr}}
+
+  /* ---------- MOBILE ---------- */
   @media(max-width:760px){
     body{flex-direction:column}
-    .sidebar{width:100%;flex:none;height:auto;position:static;flex-direction:row;flex-wrap:wrap;align-items:center;gap:4px;padding:12px}
-    .brand{padding:0 8px 0 4px} .clock{display:none} .syncpill{border:none;margin:0}
-    .nav{flex-direction:row;flex-wrap:wrap;flex:1} .nav button{width:auto;padding:8px 10px}
-    .nav button span:not(.ic):not(.badge){display:none} .nav button .badge{margin-left:4px}
-    .main{padding:18px} .quickadd input{max-width:58vw}
+    .sidebar{width:100%;flex:none;height:auto;position:sticky;top:0;z-index:40;flex-direction:column;gap:10px;
+      padding:calc(10px + env(safe-area-inset-top)) 12px 8px 12px;border-right:none;border-bottom:1px solid var(--line);
+      background:rgba(11,14,21,.96);backdrop-filter:blur(8px)}
+    .brand{padding:2px 2px 0;gap:9px}
+    .logo{width:30px;height:30px}
+    .brand h1{font-size:14px}
+    .brand small{font-size:10px}
+    .clock,.syncpill{display:none}
+    .nav{flex-direction:row;flex-wrap:nowrap;overflow-x:auto;gap:6px;padding:1px 0 3px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+    .nav::-webkit-scrollbar{display:none}
+    .nav button{width:auto;flex:0 0 auto;white-space:nowrap;padding:8px 13px;border:1px solid #1c2436;background:#11161f;font-size:13px;gap:7px}
+    .nav button .ic{width:auto;font-size:14px}
+    .nav button.active{box-shadow:none}
+    .nav button .badge{margin-left:6px}
+    .main{padding:16px 14px calc(40px + env(safe-area-inset-bottom))}
+    .topbar{flex-direction:column;align-items:stretch;gap:12px;margin-bottom:16px}
+    .greeting h2{font-size:19px}
+    .greeting p{font-size:12px}
+    .quickadd{width:100%;gap:8px}
+    .quickadd input{width:auto;flex:1 1 auto;max-width:none}
+    .grid{gap:14px}
+    .card{padding:15px}
+    .card h3{font-size:13px}
+    .statgrid{gap:10px}
+    .stat .v{font-size:22px}
+    .ring{width:74px;height:74px}
+    .ring i{width:56px;height:56px;font-size:16px}
+    .cal-grid{gap:3px}
+    .cell{min-height:52px;padding:3px;border-radius:7px}
+    .cell .dn{font-size:11px;margin-bottom:1px}
+    .ev{font-size:9px}
+    .modal{padding:18px;border-radius:16px}
+    .task{padding:12px 11px}
+    .chk{width:22px;height:22px}
+    .star,.x{padding:4px 6px;font-size:18px}
   }
   .card{background:linear-gradient(180deg,#11151f,#0e121b);border:1px solid var(--line);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);position:relative;transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease}
   .card::before{content:"";position:absolute;inset:0 0 auto 0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.07),transparent);border-radius:14px 14px 0 0}
@@ -96,7 +128,7 @@
   .x:hover{color:var(--danger)}
   .empty{color:var(--muted);font-size:13px;text-align:center;padding:18px 0;font-style:italic}
   .row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
-  select,textarea,input[type=text],input[type=date],input[type=number],input[type=time],input[type=password]{background:#0c1019;border:1px solid var(--line);color:var(--txt);padding:9px 11px;border-radius:9px;font-size:13px;outline:none;font-family:inherit}
+  select,textarea,input[type=text],input[type=date],input[type=number],input[type=time],input[type=password]{background:#0c1019;border:1px solid var(--line);color:var(--txt);padding:9px 11px;border-radius:9px;font-size:16px;outline:none;font-family:inherit}
   select:focus,textarea:focus,input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(91,140,255,.16)}
   textarea{width:100%;resize:vertical;min-height:70px}
   .seg{display:inline-flex;background:#0c1019;border:1px solid var(--line);border-radius:9px;overflow:hidden;flex-wrap:wrap}
@@ -155,9 +187,9 @@
   .modal input,.modal select,.modal textarea{width:100%}
   .modal .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
   .hint{color:var(--muted);font-size:12px;margin-top:4px;line-height:1.5}
-  .lock{position:fixed;inset:0;background:var(--bg);display:none;align-items:center;justify-content:center;z-index:100}
+  .lock{position:fixed;inset:0;background:var(--bg);display:none;align-items:center;justify-content:center;z-index:100;padding:16px}
   .lock.show{display:flex}
-  .lock .box{text-align:center;width:300px}
+  .lock .box{text-align:center;width:300px;max-width:100%}
   .lock .logo{margin:0 auto 16px;width:48px;height:48px;font-size:20px}
   .lock input{width:100%;text-align:center;margin-top:14px;padding:12px}
 </style>
@@ -176,7 +208,7 @@
     <div class="topbar">
       <div class="greeting"><h2 id="greet">Welcome back</h2><p id="subgreet"></p></div>
       <div class="quickadd">
-        <input id="capture" type="text" placeholder="Say anything... 'lunch with Sam Tuesday 1pm' or 'follow up with the lawyer'" />
+        <input id="capture" type="text" placeholder="Say anything..." />
         <button class="btn" onclick="quickCapture()">Capture</button>
       </div>
     </div>
@@ -245,13 +277,13 @@ function setSync(state,txt){const d=document.getElementById('syncDot'),t=documen
 async function pullState(){if(!supa)return;try{const res=await supa.from('app_state').select('data').eq('id','main').maybeSingle();if(res.data&&res.data.data){S=Object.assign(clone(DEFAULTS),res.data.data);localSave();render();}}catch(e){}}
 function maybeResetHabits(){if(S.habitDay!==todayStr()){S.habits.forEach(function(h){h.subs.forEach(function(s){s.done=false;});});S.habitDay=todayStr();save();}}
 const SECTIONS=[
-  {id:'home',label:'Home',ic:'◉'},{id:'tasks',label:'Tasks / CRM',ic:'☰'},{id:'brain',label:'The Brain',ic:'❖'},
+  {id:'home',label:'Home',ic:'◉'},{id:'tasks',label:'Tasks',ic:'☰'},{id:'brain',label:'Brain',ic:'❖'},
   {id:'habits',label:'Habits',ic:'✓'},{id:'health',label:'Health',ic:'♥'},{id:'journal',label:'Journal',ic:'✎'},
   {id:'calendar',label:'Calendar',ic:'▦'},{id:'goals',label:'Goals',ic:'★'},{id:'notes',label:'Notes',ic:'❏'}
 ];
 let current='home';
 function buildNav(){document.getElementById('nav').innerHTML=SECTIONS.map(function(s){return '<button class="'+(s.id===current?'active':'')+'" onclick="go(\''+s.id+'\')"><span class="ic">'+s.ic+'</span><span>'+s.label+'</span><span class="badge" id="badge-'+s.id+'"></span></button>';}).join('');}
-function go(sec){current=sec;buildNav();render();}
+function go(sec){current=sec;buildNav();render();window.scrollTo(0,0);}
 const VIEWS={home:viewHome,tasks:viewTasks,brain:viewBrain,habits:viewHabits,health:viewHealth,journal:viewJournal,calendar:viewCalendar,goals:viewGoals,notes:viewNotes};
 function render(){maybeResetHabits();const v=document.getElementById('views');v.innerHTML='';v.appendChild((VIEWS[current]||viewHome)());renderBadges();}
 function renderBadges(){
@@ -342,14 +374,14 @@ async function quickCapture(){
   if(!BRAIN_URL){localCapture(raw);if(current!=='tasks'&&current!=='home')go('tasks');else render();return;}
   toast('Thinking...',true);
   try{
-    const res=await fetch(BRAIN_URL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPA_KEY,'apikey':SUPA_KEY},body:JSON.stringify({text:raw,now:new Date().toISOString(),tz:Intl.DateTimeFormat().resolvedOptions().timeZone})});
+    const res=await fetch(BRAIN_URL,{method:'POST',headers:{'Content-Type':'application/json','apikey':SUPA_KEY},body:JSON.stringify({text:raw,now:new Date().toISOString(),tz:Intl.DateTimeFormat().resolvedOptions().timeZone})});
     if(!res.ok)throw new Error('brain '+res.status);
     const out=await res.json();await pullState();toast(out.message||'Done');
   }catch(e){localCapture(raw);render();toast('AI unavailable - saved as a task');}
 }
 function toast(msg,sticky){
   let t=document.getElementById('toast');
-  if(!t){t=document.createElement('div');t.id='toast';t.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#141926;border:1px solid #222a3b;color:#eef1f8;padding:11px 18px;border-radius:11px;font-size:13px;box-shadow:0 10px 30px rgba(0,0,0,.45);z-index:200;max-width:90vw;transition:opacity .3s';document.body.appendChild(t);}
+  if(!t){t=document.createElement('div');t.id='toast';t.style.cssText='position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:#141926;border:1px solid #222a3b;color:#eef1f8;padding:11px 18px;border-radius:11px;font-size:13px;box-shadow:0 10px 30px rgba(0,0,0,.45);z-index:200;max-width:90vw;text-align:center;transition:opacity .3s';document.body.appendChild(t);}
   t.textContent=msg;t.style.opacity='1';clearTimeout(t._h);if(!sticky)t._h=setTimeout(function(){t.style.opacity='0';},3500);
 }
 document.addEventListener('keydown',function(e){if(e.key==='Enter'&&document.activeElement.id==='capture')quickCapture();});
@@ -370,7 +402,7 @@ function viewBrain(){
   S.tasks.filter(function(t){return !t.archived;}).forEach(function(t){const c=t.cat||'Uncategorized';(map[c]=map[c]||{name:c,tasks:[],notes:[]}).tasks.push(t);});
   S.notes.forEach(function(n){const c=n.cat||'Uncategorized';(map[c]=map[c]||{name:c,tasks:[],notes:[]}).notes.push(n);});
   brainCats=Object.keys(map).map(function(k){return map[k];}).sort(function(a,b){return a.name==='Uncategorized'?1:b.name==='Uncategorized'?-1:a.name.localeCompare(b.name);});
-  wrap.innerHTML='<div class="brainhead"><h2 style="margin:0;font-size:22px">The Brain</h2><p class="hint" style="margin:5px 0 0">A live status view of every area of your life. Captures file themselves here by category - click an area to read its tasks, notes, and write a status summary.</p></div><div class="grid cols-3" id="brainGrid"></div>';
+  wrap.innerHTML='<div class="brainhead"><h2 style="margin:0;font-size:22px">The Brain</h2><p class="hint" style="margin:5px 0 0">A live status view of every area of your life. Captures file themselves here by category - tap an area to read its tasks, notes, and write a status summary.</p></div><div class="grid cols-3" id="brainGrid"></div>';
   setTimeout(function(){
     const g=wrap.querySelector('#brainGrid');
     if(!brainCats.length){g.innerHTML='<div class="empty" style="grid-column:1/-1">Nothing yet. As you capture tasks and notes, they group into life areas here automatically.</div>';return;}
@@ -379,7 +411,7 @@ function viewBrain(){
       const summary=(S.brainSummaries&&S.brainSummaries[d.name])||'';
       const chips=d.tasks.slice(0,3).map(function(t){return '<span class="chiptask '+(t.done?'done':'')+'">'+esc(t.title)+'</span>';}).join('')||'<span class="hint">No tasks</span>';
       return '<div class="card areacard" onclick="openArea('+i+')"><h3>'+esc(d.name)+'<span class="count">'+open+' open · '+d.notes.length+' notes</span></h3>'+
-        '<div class="hint" style="min-height:32px;color:'+(summary?'var(--muted)':'#5a637a')+'">'+(summary?esc(summary).slice(0,130):'No summary yet - click to add one.')+'</div>'+
+        '<div class="hint" style="min-height:32px;color:'+(summary?'var(--muted)':'#5a637a')+'">'+(summary?esc(summary).slice(0,130):'No summary yet - tap to add one.')+'</div>'+
         '<div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;max-width:100%">'+chips+'</div></div>';
     }).join('');
   });
@@ -388,7 +420,7 @@ function viewBrain(){
 function openArea(i){
   const d=brainCats[i];if(!d)return;
   const summary=(S.brainSummaries&&S.brainSummaries[d.name])||'';
-  modal('<h3>❖ '+esc(d.name)+'</h3><label>Status summary</label>'+
+  modal('<h3>❯ '+esc(d.name)+'</h3><label>Status summary</label>'+
     '<textarea id="area_sum" placeholder="The current state of this area, key risks, what matters right now...">'+esc(summary)+'</textarea>'+
     '<div style="margin-top:14px"><div class="hint" style="text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px">Tasks</div>'+
       (d.tasks.length?d.tasks.map(function(t){return '<div class="task" style="margin-bottom:6px"><div class="chk '+(t.done?'on':'')+'" onclick="toggleTask(\''+t.id+'\');setTimeout(function(){openArea('+i+');},0)">'+(t.done?'✓':'')+'</div><div class="t-body"><div class="t-title">'+esc(t.title)+'</div></div></div>';}).join(''):'<div class="hint">No tasks here.</div>')+'</div>'+
@@ -473,7 +505,7 @@ function viewCalendar(){
   const monthName=new Date(calYear,calMonth,1).toLocaleString([], {month:'long',year:'numeric'});
   wrap.innerHTML='<div class="card"><div class="cal-head"><button class="btn ghost sm" onclick="calNav(-1)">‹</button><h3 style="margin:0">'+monthName+'</h3><button class="btn ghost sm" onclick="calNav(1)">›</button><button class="btn sm" style="margin-left:auto" onclick="openEventModal()">+ Event</button></div>'+
    '<div class="cal-grid">'+['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(function(d){return '<div class="dow">'+d+'</div>';}).join('')+calCells()+'</div>'+
-   '<div class="hint" style="margin-top:12px">Click any day to add an event. A future stage can sync this with Google Calendar.</div></div>';
+   '<div class="hint" style="margin-top:12px">Tap any day to add an event. A future stage can sync this with Google Calendar.</div></div>';
   return wrap;
 }
 function calCells(){
