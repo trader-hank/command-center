@@ -160,7 +160,11 @@
   .cal-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}
   .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
   .cal-grid .dow{text-align:center;font-size:11px;color:var(--muted);text-transform:uppercase;padding:4px 0}
-  .cell{min-height:78px;border:1px solid var(--line);border-radius:9px;padding:5px;background:#10141e;font-size:12px;cursor:pointer;transition:.12s}
+  .cell{min-height:58px;border:1px solid var(--line);border-radius:9px;padding:5px;background:#10141e;font-size:12px;cursor:pointer;transition:.12s;display:flex;flex-direction:column;align-items:center;justify-content:flex-start}
+  .cell .dn{text-align:center}
+  .dots{display:flex;gap:3px;flex-wrap:wrap;justify-content:center;margin-top:3px;max-width:100%}
+  .evdot{width:5px;height:5px;border-radius:50%;background:var(--accent2);flex:0 0 auto}
+  .cell.sel{border-color:var(--accent2);box-shadow:inset 0 0 0 1px var(--accent2)}
   .cell:hover{border-color:#2c3a58}
   .cell.out{opacity:.35}
   .cell.today{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
@@ -227,7 +231,7 @@
 const SUPA_URL  = "https://hfluszhkfcbhekqgukhm.supabase.co";
 const SUPA_KEY  = "sb_publishable_PlQZxjUDvGrPsXJS7__P0A_esaHiVQ7";
 const BRAIN_URL = "https://hfluszhkfcbhekqgukhm.supabase.co/functions/v1/brain";
-const PASSCODE  = "";
+const PASSCODE  = "8558";
 const OWNER     = "Henry";
 const KEY='henry_command_center_v1';
 const DEFAULTS = {
@@ -355,6 +359,7 @@ function taskRow(t){
   return '<div class="task '+(t.done?'done':'')+'"><div class="chk '+(t.done?'on':'')+'" onclick="toggleTask(\''+t.id+'\')">'+(t.done?'✓':'')+'</div>'+
     '<div class="t-body"><div class="t-title">'+esc(t.title)+'</div><div class="t-meta">'+ar+pc+cc+'</div></div>'+
     '<button class="star '+(t.star?'on':'')+'" onclick="toggleStar(\''+t.id+'\')">'+(t.star?'★':'☆')+'</button>'+
+    '<button class="x" onclick="editTask(\''+t.id+'\')" title="Edit">✎</button>'+
     '<button class="x" onclick="archiveTask(\''+t.id+'\')">✕</button></div>';
 }
 function toggleTask(id){const t=S.tasks.find(function(x){return x.id===id;});if(!t)return;t.done=!t.done;if(t.done)t.star=false;save();render();}
@@ -454,7 +459,7 @@ function paintHabits(scope){
     const head='<div class="habit-head" ondragover="event.preventDefault()" ondrop="hDrop(event,'+i+')" onclick="'+(hasSubs?'toggleHabitOpen(\''+h.id+'\')':'toggleHabitDone(\''+h.id+'\')')+'">'+
         handle+'<div class="chk '+(allDone?'on':'')+'">'+(allDone?'✓':'')+'</div>'+
         '<div class="name" style="flex:1;min-width:0">'+esc(h.name)+'</div>'+bar+arrows+
-        '<button class="x" onclick="event.stopPropagation();delHabit(\''+h.id+'\')">✕</button></div>';
+        '<button class="x" onclick="event.stopPropagation();editHabit(\''+h.id+'\')" title="Edit">✎</button><button class="x" onclick="event.stopPropagation();delHabit(\''+h.id+'\')">✕</button></div>';
     const subs=hasSubs?'<div class="subs '+(openHabits[h.id]?'open':'')+'" id="subs-'+h.id+'">'+
         h.subs.map(function(s,si){return '<div class="sub '+(s.done?'done':'')+'" onclick="toggleSub(\''+h.id+'\','+si+')"><div class="chk '+(s.done?'on':'')+'">'+(s.done?'✓':'')+'</div><span>'+esc(s.t)+'</span></div>';}).join('')+'</div>':'';
     return '<div class="habit">'+head+subs+'</div>';
@@ -488,7 +493,7 @@ function viewHealth(){
    '<div class="row" style="justify-content:flex-end"><button class="btn sm" onclick="openMealModal()">+ Log meal</button></div>'+
    '<div class="card"><h3>Meal log <span class="count">today</span></h3><div id="mealList"></div></div>';
   setTimeout(function(){
-    wrap.querySelector('#mealList').innerHTML=today.length?today.slice().reverse().map(function(m){return '<div class="meal"><div><div style="font-weight:600">'+esc(m.name)+'</div><div class="hint">'+new Date(m.ts).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})+(m.protein?' · '+m.protein+'g protein':'')+'</div></div><div style="display:flex;align-items:center;gap:10px"><span class="cal">'+m.cal+' cal</span><button class="x" onclick="delMeal(\''+m.id+'\')">✕</button></div></div>';}).join(''):'<div class="empty">No meals logged today.</div>';
+    wrap.querySelector('#mealList').innerHTML=today.length?today.slice().reverse().map(function(m){return '<div class="meal"><div><div style="font-weight:600">'+esc(m.name)+'</div><div class="hint">'+new Date(m.ts).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})+(m.protein?' · '+m.protein+'g protein':'')+'</div></div><div style="display:flex;align-items:center;gap:10px"><span class="cal">'+m.cal+' cal</span><button class="x" onclick="editMeal(\''+m.id+'\')" title="Edit">✎</button><button class="x" onclick="delMeal(\''+m.id+'\')">✕</button></div></div>';}).join(''):'<div class="empty">No meals logged today.</div>';
   });
   return wrap;
 }
@@ -509,19 +514,20 @@ function viewJournal(){
      '<div class="hint">Every entry is timestamped and stored in your cloud. Over time this becomes a record the AI can spot patterns in.</div></div>'+
    '<div class="card"><h3>Journal <span class="count">'+S.journal.length+' entries</span></h3><div id="jList"></div></div>';
   setTimeout(function(){
-    wrap.querySelector('#jList').innerHTML=S.journal.length?S.journal.slice().reverse().map(function(j){return '<div class="entry"><div class="when">'+new Date(j.ts).toLocaleString([], {weekday:'short',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})+'<button class="x" style="float:right" onclick="delJournal(\''+j.id+'\')">✕</button></div><div class="body">'+esc(j.text)+'</div>'+(j.raw&&j.raw.trim()!==(j.text||'').trim()?'<details style="margin-top:8px"><summary style="cursor:pointer;color:var(--muted);font-size:12px">Show full transcript</summary><div style="margin-top:6px;color:var(--muted);font-size:12px;white-space:pre-wrap;border-left:2px solid var(--line);padding-left:10px">'+esc(j.raw)+'</div></details>':'')+'</div>';}).join(''):'<div class="empty">No entries yet. Reflect on your day above.</div>';
+    wrap.querySelector('#jList').innerHTML=S.journal.length?S.journal.slice().reverse().map(function(j){return '<div class="entry"><div class="when">'+new Date(j.ts).toLocaleString([], {weekday:'short',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})+'<button class="x" style="float:right" onclick="delJournal(\''+j.id+'\')">✕</button><button class="x" style="float:right" onclick="editJournal(\''+j.id+'\')" title="Edit">✎</button></div><div class="body">'+esc(j.text)+'</div>'+(j.raw&&j.raw.trim()!==(j.text||'').trim()?'<details style="margin-top:8px"><summary style="cursor:pointer;color:var(--muted);font-size:12px">Show full transcript</summary><div style="margin-top:6px;color:var(--muted);font-size:12px;white-space:pre-wrap;border-left:2px solid var(--line);padding-left:10px">'+esc(j.raw)+'</div></details>':'')+'</div>';}).join(''):'<div class="empty">No entries yet. Reflect on your day above.</div>';
   });
   return wrap;
 }
 function saveJournal(){const t=val('j_text').trim();if(!t)return;S.journal.push({id:uid(),ts:Date.now(),text:t});save();render();}
 function delJournal(id){S.journal=S.journal.filter(function(j){return j.id!==id;});save();render();}
-let calMonth=new Date().getMonth(),calYear=new Date().getFullYear();
+let calMonth=new Date().getMonth(),calYear=new Date().getFullYear(),selDay=todayStr();
 function viewCalendar(){
   const wrap=document.createElement('div');wrap.className='view active';
   const monthName=new Date(calYear,calMonth,1).toLocaleString([], {month:'long',year:'numeric'});
-  wrap.innerHTML='<div class="card"><div class="cal-head"><button class="btn ghost sm" onclick="calNav(-1)">‹</button><h3 style="margin:0">'+monthName+'</h3><button class="btn ghost sm" onclick="calNav(1)">›</button><button class="btn sm" style="margin-left:auto" onclick="openEventModal()">+ Event</button></div>'+
-   '<div class="cal-grid">'+['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(function(d){return '<div class="dow">'+d+'</div>';}).join('')+calCells()+'</div>'+
-   '<div class="hint" style="margin-top:12px">Tap any day to add an event. A future stage can sync this with Google Calendar.</div></div>';
+  wrap.innerHTML='<div class="card"><div class="cal-head"><button class="btn ghost sm" onclick="calNav(-1)">‹</button><h3 style="margin:0;flex:1;text-align:center">'+monthName+'</h3><button class="btn ghost sm" onclick="calNav(1)">›</button></div>'+
+   '<div class="cal-grid">'+['S','M','T','W','T','F','S'].map(function(d){return '<div class="dow">'+d+'</div>';}).join('')+calCells()+'</div></div>'+
+   '<div id="calAgenda" style="margin-top:16px"></div>';
+  setTimeout(renderAgenda);
   return wrap;
 }
 function calCells(){
@@ -530,10 +536,19 @@ function calCells(){
   for(let i=0;i<first;i++)cells+='<div class="cell out"><div class="dn">'+(prevDays-first+1+i)+'</div></div>';
   for(let d=1;d<=days;d++){
     const ds=calYear+'-'+String(calMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0'),isToday=ds===todayStr();
-    const evs=S.events.filter(function(e){return e.date===ds;}).sort(function(a,b){return (a.time||'').localeCompare(b.time||'');});
-    cells+='<div class="cell '+(isToday?'today':'')+'" onclick="openEventModal(\''+ds+'\')"><div class="dn">'+d+'</div>'+evs.map(function(e){return '<div class="ev" title="'+esc(e.title)+'" onclick="event.stopPropagation();delEvent(\''+e.id+'\')">'+(e.time?e.time+' ':'')+esc(e.title)+'</div>';}).join('')+'</div>';
+    const n=S.events.filter(function(e){return e.date===ds;}).length;
+    const dots=n?'<div class="dots">'+Array(Math.min(n,4)).fill('<span class="evdot"></span>').join('')+'</div>':'';
+    cells+='<div class="cell'+(isToday?' today':'')+(ds===selDay?' sel':'')+'" onclick="selectDay(\''+ds+'\')"><div class="dn">'+d+'</div>'+dots+'</div>';
   }
   return cells;
+}
+function selectDay(ds){selDay=ds;render();}
+function renderAgenda(){
+  const el=document.getElementById('calAgenda');if(!el)return;
+  const evs=S.events.filter(function(e){return e.date===selDay;}).sort(function(a,b){return (a.time||'').localeCompare(b.time||'');});
+  const heading=new Date(selDay+'T00:00:00').toLocaleDateString([], {weekday:'long',month:'long',day:'numeric'});
+  el.innerHTML='<div class="card"><h3>'+heading+'<button class="btn sm" style="margin-left:auto" onclick="openEventModal(\''+selDay+'\')">+ Add</button></h3>'+
+    (evs.length?evs.map(function(e){return '<div class="meal"><div style="font-weight:600">'+(e.time?e.time+' · ':'')+esc(e.title)+'</div><div style="display:flex;gap:6px"><button class="x" onclick="editEvent(\''+e.id+'\')" title="Edit">✎</button><button class="x" onclick="delEvent(\''+e.id+'\')" title="Delete">✕</button></div></div>';}).join(''):'<div class="empty">No events this day. Tap + Add to create one.</div>')+'</div>';
 }
 function calNav(d){calMonth+=d;if(calMonth<0){calMonth=11;calYear--;}if(calMonth>11){calMonth=0;calYear++;}render();}
 function openEventModal(date){
@@ -555,7 +570,7 @@ function viewGoals(){
   });
   return wrap;
 }
-function goalRow(g){return '<div class="goal"><span class="pill '+g.scope+'">'+g.scope+'</span><span class="g-title">'+esc(g.title)+'</span><button class="x" onclick="delGoal(\''+g.id+'\')">✕</button></div>';}
+function goalRow(g){return '<div class="goal"><span class="pill '+g.scope+'">'+g.scope+'</span><span class="g-title">'+esc(g.title)+'</span><button class="x" onclick="editGoal(\''+g.id+'\')" title="Edit">✎</button><button class="x" onclick="delGoal(\''+g.id+'\')">✕</button></div>';}
 function openGoalModal(){
   modal('<h3>New goal</h3><label>Goal</label><input id="g_title" type="text" placeholder="e.g. Ship the new product">'+
    '<label>Scope</label><select id="g_scope"><option value="week">This week</option><option value="month">This month</option></select>'+
@@ -568,7 +583,7 @@ function viewNotes(){
   const wrap=document.createElement('div');wrap.className='view active';
   wrap.innerHTML='<div class="row" style="justify-content:flex-end"><button class="btn sm" onclick="openNoteModal()">+ New note</button></div><div class="grid cols-2" id="noteGrid"></div>';
   setTimeout(function(){
-    wrap.querySelector('#noteGrid').innerHTML=S.notes.length?S.notes.slice().reverse().map(function(n){return '<div class="note"><h4>'+esc(n.title)+' <button class="x" style="float:right" onclick="delNote(\''+n.id+'\')">✕</button></h4>'+(n.cat?'<div class="cat" style="margin-bottom:6px">❖ '+esc(n.cat)+'</div>':'')+'<p>'+esc(n.body)+'</p>'+(n.raw&&n.raw.trim()!==(n.body||'').trim()?'<details style="margin-top:8px"><summary style="cursor:pointer;color:var(--muted);font-size:12px">Show full transcript</summary><div style="margin-top:6px;color:var(--muted);font-size:12px;white-space:pre-wrap;border-left:2px solid var(--line);padding-left:10px">'+esc(n.raw)+'</div></details>':'')+'</div>';}).join(''):'<div class="empty" style="grid-column:1/-1">No notes yet. Use this as your second brain - references, links, anything to keep.</div>';
+    wrap.querySelector('#noteGrid').innerHTML=S.notes.length?S.notes.slice().reverse().map(function(n){return '<div class="note"><h4>'+esc(n.title)+' <button class="x" style="float:right" onclick="delNote(\''+n.id+'\')">✕</button><button class="x" style="float:right" onclick="editNote(\''+n.id+'\')" title="Edit">✎</button></h4>'+(n.cat?'<div class="cat" style="margin-bottom:6px">❖ '+esc(n.cat)+'</div>':'')+'<p>'+esc(n.body)+'</p>'+(n.raw&&n.raw.trim()!==(n.body||'').trim()?'<details style="margin-top:8px"><summary style="cursor:pointer;color:var(--muted);font-size:12px">Show full transcript</summary><div style="margin-top:6px;color:var(--muted);font-size:12px;white-space:pre-wrap;border-left:2px solid var(--line);padding-left:10px">'+esc(n.raw)+'</div></details>':'')+'</div>';}).join(''):'<div class="empty" style="grid-column:1/-1">No notes yet. Use this as your second brain - references, links, anything to keep.</div>';
   });
   return wrap;
 }
@@ -581,6 +596,49 @@ function openNoteModal(){
 }
 function saveNote(){const t=val('n_title').trim();if(!t)return closeModal();S.notes.push({id:uid(),title:t,cat:val('n_cat').trim(),body:val('n_body')});save();closeModal();render();}
 function delNote(id){S.notes=S.notes.filter(function(n){return n.id!==id;});save();render();}
+let editId=null;
+function editTask(id){const t=S.tasks.find(function(x){return x.id===id;});if(!t)return;editId=id;
+  modal('<h3>Edit task</h3><label>Task</label><input id="et_title" type="text" value="'+esc(t.title)+'">'+
+    '<label>Area</label><select id="et_area"><option value="">- none -</option><option value="work"'+(t.area==='work'?' selected':'')+'>Work</option><option value="personal"'+(t.area==='personal'?' selected':'')+'>Personal</option></select>'+
+    '<label>Priority</label><select id="et_pri"><option value="">- none -</option><option value="high"'+(t.priority==='high'?' selected':'')+'>High</option><option value="med"'+(t.priority==='med'?' selected':'')+'>Medium</option><option value="low"'+(t.priority==='low'?' selected':'')+'>Low</option></select>'+
+    '<label>Life area / tag</label><input id="et_cat" type="text" value="'+esc(t.cat||'')+'">'+
+    '<div class="actions"><button class="btn ghost sm" onclick="closeModal()">Cancel</button><button class="btn sm" onclick="saveTaskEdit()">Save</button></div>');}
+function saveTaskEdit(){const t=S.tasks.find(function(x){return x.id===editId;});if(!t)return closeModal();t.title=val('et_title').trim()||t.title;t.area=val('et_area');t.priority=val('et_pri');t.cat=val('et_cat').trim();save();closeModal();render();}
+function editNote(id){const n=S.notes.find(function(x){return x.id===id;});if(!n)return;editId=id;
+  modal('<h3>Edit note</h3><label>Title</label><input id="en_title" type="text" value="'+esc(n.title)+'">'+
+    '<label>Life area</label><input id="en_cat" type="text" value="'+esc(n.cat||'')+'">'+
+    '<label>Body</label><textarea id="en_body">'+esc(n.body||'')+'</textarea>'+
+    '<div class="actions"><button class="btn ghost sm" onclick="closeModal()">Cancel</button><button class="btn sm" onclick="saveNoteEdit()">Save</button></div>');}
+function saveNoteEdit(){const n=S.notes.find(function(x){return x.id===editId;});if(!n)return closeModal();n.title=val('en_title').trim()||n.title;n.cat=val('en_cat').trim();n.body=val('en_body');save();closeModal();render();}
+function editMeal(id){const m=S.meals.find(function(x){return x.id===id;});if(!m)return;editId=id;
+  modal('<h3>Edit meal</h3><label>Meal</label><input id="em_name" type="text" value="'+esc(m.name)+'">'+
+    '<label>Calories</label><input id="em_cal" type="number" value="'+(m.cal||0)+'">'+
+    '<label>Protein (g)</label><input id="em_pro" type="number" value="'+(m.protein||0)+'">'+
+    '<div class="actions"><button class="btn ghost sm" onclick="closeModal()">Cancel</button><button class="btn sm" onclick="saveMealEdit()">Save</button></div>');}
+function saveMealEdit(){const m=S.meals.find(function(x){return x.id===editId;});if(!m)return closeModal();m.name=val('em_name').trim()||m.name;m.cal=+val('em_cal')||0;m.protein=+val('em_pro')||0;save();closeModal();render();}
+function editGoal(id){const g=S.goals.find(function(x){return x.id===id;});if(!g)return;editId=id;
+  modal('<h3>Edit goal</h3><label>Goal</label><input id="eg_title" type="text" value="'+esc(g.title)+'">'+
+    '<label>Scope</label><select id="eg_scope"><option value="week"'+(g.scope==='week'?' selected':'')+'>This week</option><option value="month"'+(g.scope==='month'?' selected':'')+'>This month</option></select>'+
+    '<div class="actions"><button class="btn ghost sm" onclick="closeModal()">Cancel</button><button class="btn sm" onclick="saveGoalEdit()">Save</button></div>');}
+function saveGoalEdit(){const g=S.goals.find(function(x){return x.id===editId;});if(!g)return closeModal();g.title=val('eg_title').trim()||g.title;g.scope=val('eg_scope');save();closeModal();render();}
+function editHabit(id){const h=S.habits.find(function(x){return x.id===id;});if(!h)return;editId=id;
+  const st=(h.subs||[]).map(function(s){return s.t;}).join('\n');
+  modal('<h3>Edit habit</h3><label>Habit name</label><input id="eh_name" type="text" value="'+esc(h.name)+'">'+
+    '<label>Subtasks (optional, one per line)</label><textarea id="eh_subs">'+esc(st)+'</textarea>'+
+    '<div class="actions"><button class="btn ghost sm" onclick="closeModal()">Cancel</button><button class="btn sm" onclick="saveHabitEdit()">Save</button></div>');}
+function saveHabitEdit(){const h=S.habits.find(function(x){return x.id===editId;});if(!h)return closeModal();h.name=val('eh_name').trim()||h.name;
+  const lines=val('eh_subs').split('\n').map(function(s){return s.trim();}).filter(Boolean);const old=h.subs||[];
+  h.subs=lines.map(function(t){const p=old.find(function(s){return s.t===t;});return {t:t,done:p?p.done:false};});save();closeModal();render();}
+function editEvent(id){const e=S.events.find(function(x){return x.id===id;});if(!e)return;editId=id;
+  modal('<h3>Edit event</h3><label>Title</label><input id="ee_title" type="text" value="'+esc(e.title)+'">'+
+    '<label>Date</label><input id="ee_date" type="date" value="'+(e.date||todayStr())+'">'+
+    '<label>Time</label><input id="ee_time" type="time" value="'+(e.time||'')+'">'+
+    '<div class="actions"><button class="btn ghost sm" style="margin-right:auto;color:var(--danger)" onclick="delEvent(\''+e.id+'\');closeModal();">Delete</button><button class="btn ghost sm" onclick="closeModal()">Cancel</button><button class="btn sm" onclick="saveEventEdit()">Save</button></div>');}
+function saveEventEdit(){const e=S.events.find(function(x){return x.id===editId;});if(!e)return closeModal();e.title=val('ee_title').trim()||e.title;e.date=val('ee_date')||e.date;e.time=val('ee_time');save();closeModal();render();}
+function editJournal(id){const j=S.journal.find(function(x){return x.id===id;});if(!j)return;editId=id;
+  modal('<h3>Edit journal entry</h3><label>Entry</label><textarea id="ej_text" style="min-height:120px">'+esc(j.text)+'</textarea>'+
+    '<div class="actions"><button class="btn ghost sm" onclick="closeModal()">Cancel</button><button class="btn sm" onclick="saveJournalEdit()">Save</button></div>');}
+function saveJournalEdit(){const j=S.journal.find(function(x){return x.id===editId;});if(!j)return closeModal();j.text=val('ej_text');save();closeModal();render();}
 function modal(html){document.getElementById('modalBox').innerHTML=html;document.getElementById('modalBg').classList.add('open');}
 function closeModal(){document.getElementById('modalBg').classList.remove('open');}
 document.getElementById('modalBg').addEventListener('click',function(e){if(e.target.id==='modalBg')closeModal();});
