@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Henry's Command Center</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='6' fill='%235b8cff'/><path d='M12 3l2 7 7 2-7 2-2 7-2-7-7-2 7-2z' fill='%23061216'/></svg>">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='6' fill='%235b8cff'/><path d='M12 3l2 7 7 2-7 2-2 7-2-7-7-2 7-2z' fill='%23061216'/></svg>">
 <style>
   :root{
     --bg:#070910; --panel:#0f131c; --panel2:#141926; --line:#222a3b;
@@ -201,7 +203,7 @@
 <body>
   <aside class="sidebar">
     <div class="brand">
-      <div class="logo">H</div>
+      <div class="logo"><svg viewBox="0 0 24 24" style="width:62%;height:62%;display:block" fill="#06121a"><path d="M12 3l2 7 7 2-7 2-2 7-2-7-7-2 7-2z"/></svg></div>
       <div><h1>Command Center</h1><small id="brandSub">Henry's workspace</small></div>
     </div>
     <nav class="nav" id="nav"></nav>
@@ -220,7 +222,7 @@
   </main>
   <div class="modal-bg" id="modalBg"><div class="modal" id="modalBox"></div></div>
   <div class="lock" id="lock"><div class="box">
-      <div class="logo" style="background:var(--grad);border-radius:12px;display:flex;align-items:center;justify-content:center;color:#06121a;font-weight:800">H</div>
+      <div class="logo" style="background:var(--grad);border-radius:12px;display:flex;align-items:center;justify-content:center;color:#06121a;font-weight:800"><svg viewBox="0 0 24 24" style="width:62%;height:62%;display:block" fill="#06121a"><path d="M12 3l2 7 7 2-7 2-2 7-2-7-7-2 7-2z"/></svg></div>
       <div style="font-weight:700;font-size:18px">Henry's Command Center</div>
       <div class="hint">Enter passcode to unlock</div>
       <input id="lockInput" type="password" placeholder="Passcode" onkeydown="if(event.key==='Enter')tryUnlock()">
@@ -650,7 +652,6 @@ function tick(){
   document.getElementById('subgreet').textContent=n.toLocaleDateString([], {weekday:'long',month:'long',day:'numeric',year:'numeric'});
   document.getElementById('clock').innerHTML='<b>'+n.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})+'</b><br>'+n.toLocaleDateString([], {weekday:'long',month:'short',day:'numeric'});
   document.getElementById('brandSub').textContent=S.name+"’s workspace";
-  document.querySelector('.logo').textContent=(S.name||'H').trim().charAt(0).toUpperCase();
 }
 setInterval(tick,1000);
 function tryUnlock(){if(document.getElementById('lockInput').value===PASSCODE){document.getElementById('lock').classList.remove('show');boot();}else{document.getElementById('lockInput').value='';document.getElementById('lockInput').placeholder='Wrong passcode';}}
