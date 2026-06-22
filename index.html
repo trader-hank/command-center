@@ -479,7 +479,7 @@ function openHabitModal(){
 function saveHabitModal(){const name=val('h_name').trim();if(!name)return closeModal();const subs=val('h_subs').split('\n').map(function(s){return s.trim();}).filter(Boolean).map(function(t){return {t:t,done:false};});S.habits.push({id:uid(),name:name,subs:subs,done:false});save();closeModal();render();}
 function viewHealth(){
   const wrap=document.createElement('div');wrap.className='view active';
-  const today=S.meals.filter(function(m){return new Date(m.ts).toISOString().slice(0,10)===todayStr();});
+  const today=S.meals.filter(function(m){return new Date(m.ts).toDateString()===new Date().toDateString();});
   const cal=today.reduce(function(a,m){return a+(+m.cal||0);},0),pro=today.reduce(function(a,m){return a+(+m.protein||0);},0);
   wrap.innerHTML='<div class="card" style="margin-bottom:16px"><h3>Today’s intake</h3><div class="statgrid">'+
        '<div class="stat"><div class="v">'+cal+'</div><div class="l">Calories</div></div>'+
